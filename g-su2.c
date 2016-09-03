@@ -86,6 +86,8 @@ static int regions_tried = 0;
 static int regions_converted = 0;
 static int regions_written = 0;
 static int print_help = 0;
+static int indexNum = 0;
+
 
 static int
 parse_tol_abs(struct bu_vls *error_msg, int argc, const char **argv, void *UNUSED(set_ver))
@@ -234,13 +236,17 @@ main(int argc, const char **argv)
     RT_CK_TESS_TOL(tree_state.ts_ttol);
 
     /* Write out header */
-    fprintf(fp, "# BRL-CAD generated su2 mesh file (Units mm)\n");
-    fprintf(fp, "# BRL-CAD model: %s\n# BRLCAD objects:", argv[0]);
+    fprintf(fp, "%% BRL-CAD generated su2 mesh file (Units mm)\n");
+    fprintf(fp, "%% BRL-CAD model: %s\n%% BRLCAD objects:", argv[0]);
 
     for(c=1; c<argc; c++){
         fprintf(fp, " %s", argv[c]);
         fprintf(fp, "\n");
     }
+
+    fprintf(fp, "%%\n%% Problem dimension\n%%");
+    fprintf(fp, "\nNDIME= 3");
+    fprintf(fp, "\n%%\n%% Inner element connectivity\n%%");
 
     /* Wlak indicated tree(s). Each region will be ouput separately */
     (void) db_walk_tree(dbip, argc-1, (const char **)(argv+1),
@@ -374,17 +380,10 @@ nmg_to_su2(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
     if (usemtl)
         fprintf(fp, "usemtl %d_%d_%d\n", aircode, los, material_id);
 
-    fprintf(fp, "g %s\n", pathp->fp_names[0]->d_namep);
+    fprintf(fp, "\n%% parint: %s\n", pathp->fp_names[0]->d_namep);
     for (i=1; i < pathp->fp_len; i++){
         fprintf(fp, "/%s", pathp->fp_names[i]->d_namep);
         fprintf(fp, "\n");
-    }
-
-    /* Write vertices */
-    for (i=0; i < numverts; i++){
-        v = (struct vertex *)BU_PTBL_GET(&verts, i);
-        NMG_CK_VERTEX(v);
-        fprintf(fp, "v %f %f %f\n", V3ARGS(v->vg_p->coord));
     }
 
     /* Write vertexise normals */
@@ -399,6 +398,7 @@ nmg_to_su2(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
     }
 
     /* output triangles */
+    fprintf(fp, "NELEM= %ld\n", numtri);
     for (BU_LIST_FOR(s, shell, &r->s_hd)){
         struct faceuse *fu;
 
@@ -442,7 +442,7 @@ nmg_to_su2(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
                 } else
                     use_normals = 0;
 
-                fprintf(fp, "f");
+                fprintf(fp, "5\t");
 
                 /* list vertex numbers for each triangle */
                 for (BU_LIST_FOR(eu, edgeuse, &lu->down_hd)){
@@ -468,10 +468,11 @@ nmg_to_su2(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
                         j = bu_ptbl_locate(&norms, (long *)eu->vu_p->a.magic_p);
                         fprintf(fp, " %ld//%ld", loc+1+(long)vert_offset, j+1+(long)norm_offset);
                     } else
-                        fprintf(fp, " %ld", loc+1+(long)vert_offset);
+                        fprintf(fp, "%ld\t", loc+(long)vert_offset);
                 }
 
-                fprintf(fp, "\n");
+                fprintf(fp, "%d\n", indexNum);
+                indexNum++;
 
                 if (vert_count > 3){
                     bu_ptbl_free(&verts);
@@ -483,6 +484,16 @@ nmg_to_su2(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
         }
     }
 
+    /* Write vertices */
+    fprintf(fp, "%%\n%% Node coordinates\n%%\n");
+    fprintf(fp, "NPOIN= %ld\n", numverts);
+    for (i=0; i < numverts; i++){
+        v = (struct vertex *)BU_PTBL_GET(&verts, i);
+        NMG_CK_VERTEX(v);
+        fprintf(fp, "%f\t%f\t%f\t%ld\n", V3ARGS(v->vg_p->coord), i);
+    }
+
+    /* freeing */
     vert_offset += numverts;
     bu_ptbl_free(&verts);
     if (do_normals){
