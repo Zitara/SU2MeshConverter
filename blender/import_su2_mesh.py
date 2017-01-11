@@ -168,7 +168,14 @@ def read_su2_file(context, filepath, use_some_setting):
 # ImportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatVectorProperty
+from bpy.props import (
+    StringProperty, 
+    BoolProperty,
+    BoolVectorProperty,
+    EnumProperty, 
+    FloatVectorProperty,
+    )
+    
 from bpy.types import Operator
 
 
@@ -213,6 +220,11 @@ class ImportSU2MeshData(Operator, ImportHelper):
     rotation = FloatVectorProperty(
             name="Rotation",
             subtype='EULER',
+            )
+    layers = BoolVectorProperty(
+            name="Layers",
+            description="Object Layers",
+            size=20,
             )
 
     def execute(self, context):
