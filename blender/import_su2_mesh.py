@@ -168,7 +168,14 @@ def read_su2_file(context, filepath, use_some_setting):
 # ImportHelper is a helper class, defines filename and
 # invoke() function which calls the file selector.
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatVectorProperty
+from bpy.props import (
+    StringProperty, 
+    BoolProperty,
+    BoolVectorProperty,
+    EnumProperty, 
+    FloatVectorProperty,
+    )
+    
 from bpy.types import Operator
 
 
@@ -214,6 +221,11 @@ class ImportSU2MeshData(Operator, ImportHelper):
             name="Rotation",
             subtype='EULER',
             )
+    layers = BoolVectorProperty(
+            name="Layers",
+            description="Object Layers",
+            size=20,
+            )
 
     def execute(self, context):
         print("executing...")
@@ -237,14 +249,15 @@ class ImportSU2MeshData(Operator, ImportHelper):
         #print("face constr: ", faces)
         for f_idx in faces:
             #bm.faces.new([bm.verts[i] for i in f_idx])
+#Name            |id    |#points
 #--------------------------
-#Line	           3
-#Triangle	       5
-#Quadrilateral     9
-#Tetrahedral      10
-#Hexahedral	      12
-#Wedge	          13
-#Pyramid	      14
+#Line	           3     2
+#Triangle	       5     3
+#Quadrilateral     9     4
+#Tetrahedral      10     4
+#Hexahedral	      12     8
+#Wedge	          13     6
+#Pyramid	      14     5
 #--------------------------
             print("f_idx= ", f_idx)
             if f_idx[0] == 3:
@@ -268,17 +281,24 @@ class ImportSU2MeshData(Operator, ImportHelper):
                 bm.faces.new((bm.verts[f_idx[1]], 
                               bm.verts[f_idx[2]], 
                               bm.verts[f_idx[3]],
-                              bm.verts[f_idx[4]],))
+                              bm.verts[f_idx[4]],
+                              bm.verts[f_idx[5]],
+                              bm.verts[f_idx[6]],
+                              bm.verts[f_idx[7]],
+                              bm.verts[f_idx[8]],))
             if f_idx[0] == 13:
                 bm.faces.new((bm.verts[f_idx[1]], 
                               bm.verts[f_idx[2]], 
                               bm.verts[f_idx[3]],
-                              bm.verts[f_idx[4]],))
+                              bm.verts[f_idx[4]],
+                              bm.verts[f_idx[5]],
+                              bm.verts[f_idx[6]],))
             if f_idx[0] == 14:
                 bm.faces.new((bm.verts[f_idx[1]],
                               bm.verts[f_idx[2]], 
                               bm.verts[f_idx[3]],
-                              bm.verts[f_idx[4]],))
+                              bm.verts[f_idx[4]],
+                              bm.verts[f_idx[5]]))
             
 #            #print("[bm.verts[i] for i in f_idx]", [bm.verts[i] for i in f_idx])
 #            print("f_idx: ", f_idx)
