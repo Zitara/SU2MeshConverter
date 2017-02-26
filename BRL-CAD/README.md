@@ -6,4 +6,4 @@ Next I will try to add configuration auto generation to make a study.
 
 Demo:
 ![command line](Screen Shot 2017-02-16 at 5.22.30 pm.png)
-![mesh file]((Screen Shot 2017-02-16 at 5.22.30 pm.png)
+![mesh file](Screen Shot 2017-02-16 at 5.22.05 pm.png)
